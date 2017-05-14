@@ -1,0 +1,69 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+description = 'Tonegod\'s graphical user-interface library for jMonkeyEngine'
+group = 'tonegod'
+version = '0.1.0'
+
+//sourceCompatibility = 1.7
+sourceCompatibility = 1.8
+
+repositories {
+    //maven { url 'https://dl.bintray.com/jmonkeyengine/com.jme3' }
+    maven { url "https://jcenter.bintray.com" }
+}
+
+dependencies {
+    //compile "com.jme3:jme3-core:3.0.10"
+    compile "org.jmonkeyengine:jme3-core:3.1.0-stable"
+}
+
+sourceSets {
+    main {
+        java { srcDir 'src'}
+        resources { srcDir 'src' }
+    }
+}
+
+// custom tasks for creating source/javadoc jars
+task sourcesJar(type: Jar, dependsOn: classes, description: 'Create a jar of source files.') {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+}
+task javadocJar(type: Jar, dependsOn: javadoc, description: 'Create a jar of javadoc.') {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task pom {
+    doLast {
+        pom {
+            project {
+                licenses {
+                    license {
+                        distribution 'repo'
+                        name 'FreeBSD License'
+                        url 'https://opensource.org/licenses/BSD-2-Clause'
+                    }
+                }
+            }
+        }.writeTo("${buildDir}/libs/tonegodgui-0.1.0.pom")
+    }
+}
+build { dependsOn 'pom' }
+
+// add javadoc/source jar tasks as artifacts
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2.1'
+}
+
+gradle.projectsEvaluated {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-Xlint:unchecked"
+        //options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+    }
+}
