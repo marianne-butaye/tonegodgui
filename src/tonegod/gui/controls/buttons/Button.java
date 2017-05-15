@@ -57,11 +57,29 @@ public abstract class Button extends Element implements Control, MouseButtonList
     protected Vector2f hoverImgOffset, pressedImgOffset;
     protected String styleName;
     protected static String defaultStyleName = "Button";
-    protected boolean isGrayedOut = false;
+    protected String orgText = "";
     // Optional LabelElement
     protected boolean useOptionalLabel = false;
     protected TextElement buttonLabel;
 
+    @Override
+    public void hide()
+    {
+        super.hide();
+        orgText = this.getText();
+        this.setText("");
+        System.out.println("hidden !");
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+        if(!orgText.isEmpty())
+            this.setText(orgText);
+        System.out.println("showing !");
+    }
+    
     /**
      * Creates a new instance of the Button control
      *
@@ -384,27 +402,6 @@ public abstract class Button extends Element implements Control, MouseButtonList
      */
     public static String getDefaultStyleName() {
         return defaultStyleName;
-    }
-
-    /**
-     * IsGrayedOut getter.
-     * @return True if the button is grayed out and disabled.
-     */
-    public boolean getIsGrayedOut() {
-        return isGrayedOut;
-    }
-
-    /**
-     * IsGrayedOut setter.
-     * @param isGrayedOut If true, disable the button and makes it become gray.
-     */
-    public void setIsGrayedOut(boolean isGrayedOut) {
-        this.isGrayedOut = isGrayedOut;
-        if (isGrayedOut) {
-            setIgnoreMouse(true);
-        } else {
-            setIgnoreMouse(false);
-        }
     }
 
     @Override

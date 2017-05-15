@@ -278,7 +278,6 @@ public abstract class TabControl extends Element {
      * @param index Index of the tab panel element.
      * @return The tab panel element with the given index of the tab control.
      * @throws ArrayIndexOutOfBoundsException If no tab panel exists at index.
-     * @since 0.2
      */
     public Element getTab(int index) throws ArrayIndexOutOfBoundsException {
         if (tabPanels.containsKey(index)) {
