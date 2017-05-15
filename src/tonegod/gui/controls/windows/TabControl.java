@@ -30,7 +30,7 @@ import tonegod.gui.framework.core.AnimText;
  * The panel can be a classic panel or a scrollable panel.
  * Children can be added using {@link #addTabChild(int, Element)}.
  * 
- * @author t0neg0d, marianne
+ * @author t0neg0d
  */
 public abstract class TabControl extends Element {
 

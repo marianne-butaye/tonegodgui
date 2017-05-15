@@ -17,7 +17,8 @@ This version has some minor modifications from the original tonegodgui forked fr
 [Current version's Javadoc](dist/javadoc/index.html)
 
 ### Components
-* [TabControl](dist/readme/TabControl.md)
+* [Button](readme/Button.md)
+* [TabControl](readme/TabControl.md)
 
 ## other known versions/forks
 
