@@ -15,8 +15,7 @@ Buttons are an abstract class providing methods for handling user input
 * **Events :** Buttons provide an optional stillPressed event
 * **Modes :** Buttons can be set to Toggle mode.
 * **Effects :** Buttons have default effects set for Hover, Pressed & LoseFocus
-* **Enable/Disable :** Buttons can be enabled/disabled (no response to events)
-and also grayed out (disabled with their appearance changed for the user).
+* **Enable/Disable :** Buttons can be enabled/disabled.
 * **Styles :** Buttons can be initialised with different styles (declared in your style_map.gui.xml).
 You can then have buttons with different styles in your application.
 
@@ -186,7 +185,8 @@ Button button = new ButtonAdapter(screen, "button", new Vector2f(15, 15), new Ve
 
 
 * **void setTabFocus()**
-* **void setIsGrayedOut(boolean isGrayedOut)**
+* **void setIsEnabled(boolean isEnabled)**
+* **void setIsVisible(boolean isVisible)**
 * **void setIsToggleButton(boolean isToggleButton)**
 * **void setIsRadioButton(boolean isRadioButton) :** Radio Button = click once to activate and stays active
 

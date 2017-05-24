@@ -68,7 +68,6 @@ public abstract class Button extends Element implements Control, MouseButtonList
         super.hide();
         orgText = this.getText();
         this.setText("");
-        System.out.println("hidden !");
     }
     
     @Override
@@ -77,7 +76,6 @@ public abstract class Button extends Element implements Control, MouseButtonList
         super.show();
         if(!orgText.isEmpty())
             this.setText(orgText);
-        System.out.println("showing !");
     }
     
     /**
