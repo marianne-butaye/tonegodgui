@@ -28,7 +28,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
 
     protected int lineNumber = 1;
     protected float orgY = 0;
-    
+
     /**
      * Creates a new instance of the TextField control
      *
@@ -155,7 +155,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         caret.setScaleEW(true);
         caret.setScaleNS(false);
         caret.setDocking(Docking.SW);
-        
+
         this.setFontSize(screen.getStyle("TextField").getFloat("fontSize"));
         this.setTextPadding(padding);
         this.setTextWrap(LineWrapMode.valueOf(screen.getStyle("TextField").getString("textWrap")));
@@ -231,7 +231,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                         || (Screen.isWindows() && !ctrl)
                         || (Screen.isUnix() && !ctrl)
                         || (Screen.isSolaris() && !ctrl)) {
-                    caretIndex--;
+                    caretIndex--; 
                 } else {
                     int cIndex = caretIndex;
                     if (cIndex > 0) {
@@ -321,64 +321,49 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 resetTextRange();
                 setTextRangeStart(caretIndex);
             }
-        } else if(evt.getKeyCode() == KeyInput.KEY_DOWN || evt.getKeyCode() == KeyInput.KEY_UP) {
+        } else if (evt.getKeyCode() == KeyInput.KEY_DOWN || evt.getKeyCode() == KeyInput.KEY_UP) {
             int indexSinceStartOfLine = 0, currentLine = 1, goal = whichLineNumber();
             List<Integer> lastLineSizes = new ArrayList<>();
-            for(int i = 0, j = -1; i < textFieldText.size(); i++)
-            {
-                char c = textFieldText.get(i).charAt(0);
-                if(goal == currentLine && caretIndex == i + 1)
-                {
-                    indexSinceStartOfLine = caretIndex;
-                    for(int lineSize : lastLineSizes)
-                    {
-                        indexSinceStartOfLine -= (lineSize + 1); 
-                    }   
-                }
-                if(c == '\n' || textFieldText.size() == i+1)
-                {
-                    currentLine++;
+            int sum = 0;
+            System.out.println("goal:"+goal);
+            System.out.println("caretIndex:"+caretIndex);
+            for (int i = 0, j = -1; i < finalText.length(); i++) {
+                char c = finalText.charAt(i);
+                if (c == '\n' || finalText.length() == i + 1) {
                     if(j >= 0)
-                        lastLineSizes.add(i - lastLineSizes.get(j));
+                        lastLineSizes.add(i - (sum+1));
                     else
                         lastLineSizes.add(i);
                     j++;
+                    sum += lastLineSizes.get(j);
                 }
-            }            
-                    
-            caretIndex = indexSinceStartOfLine;
-            currentLine = 1;
-            
-            if(evt.getKeyCode() == KeyInput.KEY_UP)
-            {
-                for(int lineSize : lastLineSizes)
-                {
-                    if(currentLine < goal - 1)
-                    {
-                        currentLine++;
-                        caretIndex += lineSize + 1;
-                    }
-                    else
-                        break;
-                }
-                if(goal-1 >= 0 && lastLineSizes.size() >= goal-1 && lastLineSizes.get(goal-2) < indexSinceStartOfLine)
-                    caretIndex -= (indexSinceStartOfLine - lastLineSizes.get(goal-2));
             }
-            else
-            {
-                for(int lineSize : lastLineSizes)
-                {
-                    if(currentLine <= goal)
-                    {
-                        currentLine++;
-                        caretIndex += lineSize + 1;
-                    }
-                    else
-                        break;
+        
+            sum = 0;
+            for (int i = 0; i < lastLineSizes.size(); i++) {
+                if(caretIndex >= sum && caretIndex <= sum + lastLineSizes.get(i))
+                    break;
+                currentLine++;
+                sum += (lastLineSizes.get(i) + 1);
+            }
+            System.out.println(lastLineSizes);
+            System.out.println(currentLine);
+            if (evt.getKeyCode() == KeyInput.KEY_UP && currentLine >= 2) {
+                int ciBefore = caretIndex;
+                caretIndex -= (lastLineSizes.get(currentLine - 2) + 1);
+                
+                if (sum + lastLineSizes.get(currentLine-1) == ciBefore && lastLineSizes.get(currentLine-1) > lastLineSizes.get(currentLine - 2)) {
+                    caretIndex -= (lastLineSizes.get(currentLine - 1) - lastLineSizes.get(currentLine - 2));
                 }
-                if(lastLineSizes.size() >= goal + 1 && indexSinceStartOfLine > lastLineSizes.get(goal))
-                    caretIndex -= (indexSinceStartOfLine - lastLineSizes.get(goal));
-            }              
+            } else if (evt.getKeyCode() == KeyInput.KEY_DOWN && lastLineSizes.size() > currentLine){
+                int ciBefore = caretIndex;
+                caretIndex += (lastLineSizes.get(currentLine - 1) + 1);
+                
+                if (sum + lastLineSizes.get(currentLine-1) == ciBefore && lastLineSizes.get(currentLine-1) > lastLineSizes.get(currentLine)) {
+                    caretIndex -= (lastLineSizes.get(currentLine - 1) - lastLineSizes.get(currentLine));
+                }
+            }
+            System.out.println(caretIndex);
         } else if (evt.getKeyCode() == KeyInput.KEY_HOME || evt.getKeyCode() == KeyInput.KEY_PRIOR) {
             caretIndex = 0;
             getVisibleText();
@@ -523,122 +508,101 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         widthTest.setBox(null);
         widthTest.setSize(getFontSize());
 
-        int index1 = 0, index2;
+        int index2;
+        
+        List<Integer> lastLineSizes = new ArrayList<>();
+        int sum = 0;
+        for (int i = 0, j = -1; i < finalText.length(); i++) {
+            char c = finalText.charAt(i);
+            if (c == '\n' || finalText.length() == i + 1) {
+                if (j >= 0) {
+                    lastLineSizes.add(i - (sum + 1));
+                } else {
+                    lastLineSizes.add(i);
+                }
+                j++;
+                sum += lastLineSizes.get(j);
+            }
+        }
 
         widthTest.setText(finalText);
-        if (head == -1 || tail == -1 || widthTest.getLineWidth() < getWidth()) {
-            head = 0;
-            tail = finalText.length();
-            if (head != tail && head != -1 && tail != -1) {
-                visibleText = finalText.substring(head, tail);
-            } else {
-                visibleText = "";
-            }
-        } else if (caretIndex < head) {
-            head = caretIndex;
-            index2 = caretIndex;
-            if (index2 == caretIndex && caretIndex != textFieldText.size()) {
-                index2 = caretIndex + 1;
-                widthTest.setText(finalText.substring(caretIndex, index2));
-                while (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                    if (index2 == textFieldText.size()) {
-                        break;
-                    }
-                    widthTest.setText(finalText.substring(caretIndex, index2 + 1));
-                    if (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                        index2++;
-                    }
+        if (caretIndex < head) {    
+            int indexActualLine = 0;
+            for (int i = 0, j = 0; i < finalText.length(); i++) {
+                if (i > 0 && finalText.charAt(i - 1) == '\n') {
+                    indexActualLine += lastLineSizes.get(j);
+                    j++;
+                }
+                if (caretIndex == i-1) {
+                    break;
                 }
             }
-            if (index2 != textFieldText.size()) {
-                index2++;
+            head = caretIndex-indexActualLine;
+            
+            index2 = finalText.length(); 
+            for (int i = lastLineSizes.size()-1; i >=0; i--) {
+                if(caretIndex >= index2 - lastLineSizes.get(i) - 1)
+                    break;
+                index2 -= (lastLineSizes.get(i) + 1);
             }
+            
+            widthTest.setText(finalText.substring(head, index2));
             tail = index2;
+            
             if (head != tail && head != -1 && tail != -1) {
                 visibleText = finalText.substring(head, tail);
             } else {
                 visibleText = "";
             }
         } else if (caretIndex > tail) {
-            tail = caretIndex;
-            index2 = caretIndex;
-            if (index2 == caretIndex && caretIndex != 0) {
-                index2 = caretIndex - 1;
-                widthTest.setText(finalText.substring(index2, caretIndex));
-                while (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                    if (index2 == 0) {
-                        break;
-                    }
-                    widthTest.setText(finalText.substring(index2 - 1, caretIndex));
-                    if (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                        index2--;
-                    }
-                }
+            tail = finalText.length();
+
+            index2 = 0;
+            int i = 0;
+            while (widthTest.getHeight() > this.getHeight()) {
+                index2 += (lastLineSizes.get(i) + 1);
+                widthTest.setText(finalText.substring(index2, finalText.length()));
+                i++;
             }
+
             head = index2;
             if (head != tail && head != -1 && tail != -1) {
-                visibleText = finalText.substring(head, caretIndex);
+                visibleText = finalText.substring(head, finalText.length());
             } else {
                 visibleText = "";
             }
-        } else {
-            index2 = tail;
-            if (index2 > finalText.length()) {
-                index2 = finalText.length();
-            }
-            if (tail != head) {
-                widthTest.setText(finalText.substring(head, index2));
-                if (widthTest.getLineWidth() > getWidth() - (getTextPadding() * 2)) {
-                    while (widthTest.getLineWidth() > getWidth() - (getTextPadding() * 2)) {
-                        if (index2 == head) {
-                            break;
-                        }
-                        widthTest.setText(finalText.substring(head, index2 - 1));
-                        if (widthTest.getLineWidth() > getWidth() - (getTextPadding() * 2)) {
-                            index2--;
-                        }
-                    }
-                } else if (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                    while (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2) && index2 < finalText.length()) {
-                        if (index2 == head) {
-                            break;
-                        }
-                        widthTest.setText(finalText.substring(head, index2 + 1));
-                        if (widthTest.getLineWidth() < getWidth() - (getTextPadding() * 2)) {
-                            index2++;
-                        }
-
-                    }
-                }
-            }
-            tail = index2;
+        } else if (caretIndex <= tail && caretIndex >= head) {
+            if(tail > finalText.length())
+                tail = finalText.length();
+    
             if (head != tail && head != -1 && tail != -1) {
                 visibleText = finalText.substring(head, tail);
             } else {
                 visibleText = "";
             }
         }
-        
+
         updateLineNumber(visibleText);
         int indexActualLine = 0, line = 1;
         int goal = whichLineNumber();
-        
-        for(int i = 0; i < visibleText.length(); i++)
-        {
-            if(visibleText.charAt(i) == '\n')
+
+        for (int i = 0; i < visibleText.length(); i++) {
+            if (visibleText.charAt(i) == '\n') {
                 line++;
-            if(line == goal)
-            {
-                indexActualLine = i;
+            }
+            if (line == goal) {
+                indexActualLine = i + head + 1;
+                if (i == 0) {
+                    indexActualLine--;
+                }
                 break;
             }
         }
-        
+
         String testString = "";
         widthTest.setText(".");
         float fixWidth = widthTest.getLineWidth();
         boolean useFix = false;
-
         if (!finalText.equals("")) {
             try {
                 testString = finalText.substring(indexActualLine, caretIndex);
@@ -657,36 +621,35 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         }
 
         caretX = nextCaretX;
-        
-    
-        if(caretIndex > 0 && visibleText.charAt(caretIndex - 1) == '\n')
-            caretX = 0;
-        setCaretPosition(getAbsoluteX() + caretX, goal);
 
+        if (caretIndex - head - 1 > 0 && visibleText.charAt(caretIndex - head - 1) == '\n') {
+            caretX = 0;
+        }
+        setCaretPosition(getAbsoluteX() + caretX, goal);
+        
         return visibleText;
     }
 
-    protected void updateLineNumber(String visibleText)
-    {
+    protected void updateLineNumber(String visibleText) {
         lineNumber = 1;
-        for(int i = 0; i < visibleText.length(); i++)
-        {
+        for (int i = 0; i < visibleText.length(); i++) {
             char c = visibleText.charAt(i);
-            if(c == '\n')
+            if (c == '\n') {
                 lineNumber++;
+            }
         }
     }
-    
-    protected int whichLineNumber()
-    {
+
+    protected int whichLineNumber() {
         int actualLineNumber = 1;
-        for(int i = 0; i < visibleText.length(); i++)
-        {
+        for (int i = 0; i < visibleText.length(); i++) {
             char c = visibleText.charAt(i);
-            if(c == '\n')
+            if (c == '\n') {
                 actualLineNumber++;
-            if(i + 1 == caretIndex)
+            }
+            if (i + 1 == caretIndex - head) {
                 return actualLineNumber;
+            }
         }
         return 1;
     }
@@ -704,12 +667,12 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 float padding = screen.getStyle("TextField").getFloat("textPadding");
                 caret.getMaterial().setFloat("CaretX", caretX + getTextPadding());
                 caret.getMaterial().setFloat("LastUpdate", app.getTimer().getTimeInSeconds());
-                System.out.println("setYWhich:"+whichLineNumber());
-                caret.setY(orgY-(whichLineNumber()-1)*caret.getHeight());
+                System.out.println("setYWhich:" + whichLineNumber());
+                caret.setY(orgY - (whichLineNumber() - 1) * caret.getHeight());
             }
         }
     }
-    
+
     protected void setCaretPosition(float caretX, float caretY) {
         System.out.println("setCaretPosition(x,y)");
         if (textElement != null) {
@@ -717,32 +680,29 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 float padding = screen.getStyle("TextField").getFloat("textPadding");
                 caret.getMaterial().setFloat("CaretX", caretX + getTextPadding());
                 caret.getMaterial().setFloat("LastUpdate", app.getTimer().getTimeInSeconds());
-                System.out.println("setY:"+caretY);
-                caret.setY(orgY-(caretY-1)*caret.getHeight());
+                System.out.println("setY:" + caretY);
+                caret.setY(orgY - (caretY - 1) * caret.getHeight());
             }
         }
     }
 
     @Override
-    protected void setCaretPositionByXYNoRange(float x, float y) { 
+    protected void setCaretPositionByXYNoRange(float x, float y) {
         System.out.println(y);
         System.out.println("setCaretPositionByXYNoRange");
         int currentLine = 1;
         List<Integer> lastLineSizes = new ArrayList<>();
-        for(int i = 0, j = -1; i < textFieldText.size(); i++)
-        {
+        int sum = 0;
+        for (int i = 0, j = -1; i < textFieldText.size(); i++) {
             char c = textFieldText.get(i).charAt(0);
-            if(c == '\n' || textFieldText.size() == i+1)
-            {
+            if (c == '\n' || textFieldText.size() == i + 1) {
                 currentLine++;
-                if(j >= 0)
-                    lastLineSizes.add(i - lastLineSizes.get(j));
-                else
-                    lastLineSizes.add(i);
+                lastLineSizes.add(i);
                 j++;
+                sum += lastLineSizes.get(j);
             }
-        }            
-        
+        }
+
         int indexY = 1;
         float h, padding = screen.getStyle("TextField").getFloat("textPadding");
         if (screen.getStyle("TextField").getFloat("fontSize") - padding * 2 <= getHeight()) {
@@ -750,22 +710,19 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         } else {
             h = getHeight() - padding * 2;
         }
-        
+
         System.out.println(this.whichLineNumber());
         float relY;
-        if(whichLineNumber() == 2)
-        {
+        if (whichLineNumber() == 2) {
             relY = (caret.getY() * (y - h * 1)) / caret.getAbsoluteY(); //ok for 295
-            indexY = (int)((orgY - relY + h * 0) / h + 1);
-        }
-        else
-        {
+            indexY = (int) ((orgY - relY + h * 0) / h + 1);
+        } else {
             relY = (caret.getY() * (y - h * 0)) / caret.getAbsoluteY();
-            indexY = (int)((orgY - relY + h * 1) / h + 1);
+            indexY = (int) ((orgY - relY + h * 1) / h + 1);
         }
         System.out.println(indexY);
-        
-        int index1 =  visibleText.length();
+
+        int index1 = visibleText.length();
         if (visibleText.length() > 0) {
             String testString = "";
             widthTest.setText(".");
@@ -783,31 +740,28 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                     break;
                 }
             }
-            
+
             caretIndex = index1;
             currentLine = 1;
 
-            for(int lineSize : lastLineSizes)
-            {
-                if(currentLine < indexY)
-                {
+            for (int lineSize : lastLineSizes) {
+                if (currentLine < indexY) {
                     currentLine++;
                     caretIndex += lineSize + 1;
-                }
-                else
+                } else {
                     break;
+                }
             }
-            
+
             updateLineNumber(visibleText);
             int indexActualLine = 0, line = 1;
             int goal = whichLineNumber();
 
-            for(int i = 0; i < visibleText.length(); i++)
-            {
-                if(visibleText.charAt(i) == '\n')
+            for (int i = 0; i < visibleText.length(); i++) {
+                if (visibleText.charAt(i) == '\n') {
                     line++;
-                if(line == goal)
-                {
+                }
+                if (line == goal) {
                     indexActualLine = i;
                     break;
                 }
@@ -821,7 +775,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 }
             } catch (Exception ex) {
             }
-        
+
             widthTest.setText(testString);
             float nextCaretX = widthTest.getLineWidth();
             if (useFix) {
@@ -830,15 +784,17 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
 
             caretX = nextCaretX;
         }
-        
-        if(caretIndex > visibleText.length())
-                    caretIndex = visibleText.length();
-        if(caretIndex > 0 && visibleText.charAt(caretIndex - 1) == '\n')
+
+        if (caretIndex > visibleText.length()) {
+            caretIndex = visibleText.length();
+        }
+        if (caretIndex > 0 && visibleText.charAt(caretIndex - 1) == '\n') {
             caretX = 0;
+        }
         System.out.println("XYRange");
         setCaretPosition(getAbsoluteX() + caretX, indexY);
     }
-    
+
     @Override
     protected void centerTextVertically() {
         System.out.println("centerTextVertically");
