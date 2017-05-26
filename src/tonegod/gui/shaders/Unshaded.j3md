@@ -26,6 +26,10 @@ MaterialDef Unshaded {
 		Boolean ShowTextRange : false
 		Float TextRangeStart : 0.0
 		Float TextRangeEnd : 0.0
+                Float TextRangeStartX : 0.0
+		Float TextRangeEndX : 0.0
+                Float TextRangeStartY : 0.0
+		Float TextRangeEndY : 0.0
 		Texture2D AlphaMap
 		Vector2 OffsetAlphaTexCoord
     }

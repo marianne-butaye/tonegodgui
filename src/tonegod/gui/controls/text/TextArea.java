@@ -5,7 +5,7 @@ import com.jme3.font.BitmapText;
 import com.jme3.font.LineWrapMode;
 import com.jme3.input.KeyInput;
 import com.jme3.input.event.KeyInputEvent;
-import com.jme3.input.event.MouseButtonEvent;
+import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector4f;
 import com.jme3.scene.control.Control;
@@ -325,17 +325,21 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
             int indexSinceStartOfLine = 0, currentLine = 1, goal = whichLineNumber();
             List<Integer> lastLineSizes = new ArrayList<>();
             int sum = 0;
-            System.out.println("goal:"+goal);
-            System.out.println("caretIndex:"+caretIndex);
             for (int i = 0, j = -1; i < finalText.length(); i++) {
                 char c = finalText.charAt(i);
-                if (c == '\n' || finalText.length() == i + 1) {
-                    if(j >= 0)
-                        lastLineSizes.add(i - (sum+1));
+                if (c == '\n' || finalText.length() == i + 1)
+                {
+                    if(j >= 0 && c == '\n')
+                        lastLineSizes.add(i - sum - 1);
+                    else if (j >= 0)
+                        lastLineSizes.add(i - sum);
                     else
+                    {
                         lastLineSizes.add(i);
+                        sum--;
+                    }
                     j++;
-                    sum += lastLineSizes.get(j);
+                    sum += (lastLineSizes.get(j) + 1);
                 }
             }
         
@@ -346,8 +350,6 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 currentLine++;
                 sum += (lastLineSizes.get(i) + 1);
             }
-            System.out.println(lastLineSizes);
-            System.out.println(currentLine);
             if (evt.getKeyCode() == KeyInput.KEY_UP && currentLine >= 2) {
                 int ciBefore = caretIndex;
                 caretIndex -= (lastLineSizes.get(currentLine - 2) + 1);
@@ -363,7 +365,6 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                     caretIndex -= (lastLineSizes.get(currentLine - 1) - lastLineSizes.get(currentLine));
                 }
             }
-            System.out.println(caretIndex);
         } else if (evt.getKeyCode() == KeyInput.KEY_HOME || evt.getKeyCode() == KeyInput.KEY_PRIOR) {
             caretIndex = 0;
             getVisibleText();
@@ -476,6 +477,87 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         controlKeyPressHook(evt, getText());
         evt.setConsumed();
     }
+    
+    @Override
+    protected void setTextRangeEnd(int tail) {
+        System.out.println("setTextRangeEnd");
+        if (!visibleText.equals("") && rangeHead != -1) {
+            widthTest.setSize(getFontSize());
+
+            widthTest.setText(".");
+            float diff = widthTest.getLineWidth();
+
+            float rangeX;
+            System.out.println(rangeHead);
+            System.out.println(head);
+            if (rangeHead - this.head <= 0) {
+                widthTest.setText("");
+                rangeX = widthTest.getLineWidth();
+            } else if (rangeHead - this.head < visibleText.length()) {
+                widthTest.setText(visibleText.substring(0, rangeHead - this.head));
+                float width = widthTest.getLineWidth();
+                if (widthTest.getText().length() > 0) {
+                    if (widthTest.getText().charAt(widthTest.getText().length() - 1) == ' ') {
+                        widthTest.setText(widthTest.getText() + ".");
+                        width = widthTest.getLineWidth() - diff;
+                    }
+                }
+                rangeX = width;
+                System.out.println("rX:"+rangeX);
+            } else {
+                widthTest.setText(visibleText);
+                rangeX = widthTest.getLineWidth();
+            }
+
+            if (rangeHead >= this.head) {
+                rangeX = getAbsoluteX() + rangeX + getTextPadding();
+                System.out.println(rangeX);
+            } else {
+                rangeX = getTextPadding();
+            }
+
+            rangeTail = tail;
+            System.out.println(rangeTail);
+            if (tail - this.head <= 0) {
+                widthTest.setText("");
+            } else if (tail - this.head < visibleText.length()) {
+                widthTest.setText(visibleText.substring(0, tail - this.head));
+            } else {
+                widthTest.setText(visibleText);
+            }
+
+            textRangeText = (rangeHead < rangeTail) ? finalText.substring(rangeHead, rangeTail) : finalText.substring(rangeTail, rangeHead);
+
+            float rangeW = getTextPadding();
+            if (rangeTail <= this.tail) {
+                float width = widthTest.getLineWidth();
+                if (widthTest.getText().length() > 0) {
+                    if (widthTest.getText().charAt(widthTest.getText().length() - 1) == ' ') {
+                        widthTest.setText(widthTest.getText() + ".");
+                        width = widthTest.getLineWidth() - diff;
+                    }
+                }
+                rangeW = getAbsoluteX() + width + getTextPadding();
+                System.out.println("rW:"+rangeW);
+            }
+            
+            float rangeY = 0, rangeZ = 0;
+
+            if (rangeHead > rangeTail) {
+                caret.getMaterial().setFloat("TextRangeStartX", rangeW);
+                caret.getMaterial().setFloat("TextRangeEndX", rangeX);
+                caret.getMaterial().setFloat("TextRangeStartY", rangeY);
+                caret.getMaterial().setFloat("TextRangeEndY", rangeZ);
+            } else {
+                caret.getMaterial().setFloat("TextRangeStartX", rangeX);
+                caret.getMaterial().setFloat("TextRangeEndX", rangeW);
+                caret.getMaterial().setFloat("TextRangeStartY", rangeZ);
+                caret.getMaterial().setFloat("TextRangeEndY", rangeY);
+            }
+
+            caret.getMaterial().setBoolean("ShowTextRange", true);
+        }
+    }
 
     @Override
     protected void setFontSizeIntern(float fontSize) {
@@ -514,36 +596,36 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
         int sum = 0;
         for (int i = 0, j = -1; i < finalText.length(); i++) {
             char c = finalText.charAt(i);
-            if (c == '\n' || finalText.length() == i + 1) {
-                if (j >= 0) {
-                    lastLineSizes.add(i - (sum + 1));
-                } else {
+            if (c == '\n' || finalText.length() == i + 1)
+            {
+                if(j >= 0 && c == '\n')
+                    lastLineSizes.add(i - sum - 1);
+                else if (j >= 0)
+                    lastLineSizes.add(i - sum);
+                else
+                {
                     lastLineSizes.add(i);
+                    sum--;
                 }
                 j++;
-                sum += lastLineSizes.get(j);
+                sum += (lastLineSizes.get(j) + 1);
             }
-        }
+        } 
 
         widthTest.setText(finalText);
         if (caretIndex < head) {    
             int indexActualLine = 0;
-            for (int i = 0, j = 0; i < finalText.length(); i++) {
+            for (int i = 0, j = 0; i <= caretIndex; i++) {
                 if (i > 0 && finalText.charAt(i - 1) == '\n') {
-                    indexActualLine += lastLineSizes.get(j);
+                    indexActualLine += lastLineSizes.get(j)+1;
                     j++;
                 }
-                if (caretIndex == i-1) {
-                    break;
-                }
             }
-            head = caretIndex-indexActualLine;
-            
+            head = indexActualLine;
+  
             index2 = finalText.length(); 
-            for (int i = lastLineSizes.size()-1; i >=0; i--) {
-                if(caretIndex >= index2 - lastLineSizes.get(i) - 1)
-                    break;
-                index2 -= (lastLineSizes.get(i) + 1);
+            for (int i = lastLineSizes.size(); i > lineNumber; i--) {
+                index2 -= (lastLineSizes.get(i - 1) + 1);
             }
             
             widthTest.setText(finalText.substring(head, index2));
@@ -688,20 +770,27 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
 
     @Override
     protected void setCaretPositionByXYNoRange(float x, float y) {
-        System.out.println(y);
         System.out.println("setCaretPositionByXYNoRange");
         int currentLine = 1;
         List<Integer> lastLineSizes = new ArrayList<>();
         int sum = 0;
-        for (int i = 0, j = -1; i < textFieldText.size(); i++) {
-            char c = textFieldText.get(i).charAt(0);
-            if (c == '\n' || textFieldText.size() == i + 1) {
-                currentLine++;
-                lastLineSizes.add(i);
+        for (int i = 0, j = -1; i < finalText.length(); i++) {
+            char c = finalText.charAt(i);
+            if (c == '\n' || finalText.length() == i + 1)
+            {
+                if(j >= 0 && c == '\n')
+                    lastLineSizes.add(i - sum - 1);
+                else if (j >= 0)
+                    lastLineSizes.add(i - sum);
+                else
+                {
+                    lastLineSizes.add(i);
+                    sum--;
+                }
                 j++;
-                sum += lastLineSizes.get(j);
+                sum += (lastLineSizes.get(j) + 1);
             }
-        }
+        } 
 
         int indexY = 1;
         float h, padding = screen.getStyle("TextField").getFloat("textPadding");
@@ -711,7 +800,6 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
             h = getHeight() - padding * 2;
         }
 
-        System.out.println(this.whichLineNumber());
         float relY;
         if (whichLineNumber() == 2) {
             relY = (caret.getY() * (y - h * 1)) / caret.getAbsoluteY(); //ok for 295
@@ -720,10 +808,10 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
             relY = (caret.getY() * (y - h * 0)) / caret.getAbsoluteY();
             indexY = (int) ((orgY - relY + h * 1) / h + 1);
         }
-        System.out.println(indexY);
 
         int index1 = visibleText.length();
         if (visibleText.length() > 0) {
+                   
             String testString = "";
             widthTest.setText(".");
             float fixWidth = widthTest.getLineWidth();
@@ -741,7 +829,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                 }
             }
 
-            caretIndex = index1;
+            caretIndex = index1 + head;
             currentLine = 1;
 
             for (int lineSize : lastLineSizes) {
@@ -752,7 +840,7 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                     break;
                 }
             }
-
+        
             updateLineNumber(visibleText);
             int indexActualLine = 0, line = 1;
             int goal = whichLineNumber();
@@ -762,7 +850,10 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
                     line++;
                 }
                 if (line == goal) {
-                    indexActualLine = i;
+                    indexActualLine = i + head + 1;
+                    if (i == 0) {
+                        indexActualLine--;
+                    }
                     break;
                 }
             }
@@ -781,17 +872,16 @@ public class TextArea extends TextField implements Control, KeyboardListener, Ta
             if (useFix) {
                 nextCaretX -= fixWidth;
             }
-
+        
             caretX = nextCaretX;
         }
 
         if (caretIndex > visibleText.length()) {
             caretIndex = visibleText.length();
         }
-        if (caretIndex > 0 && visibleText.charAt(caretIndex - 1) == '\n') {
+        if (caretIndex - head - 1 > 0 && visibleText.charAt(caretIndex - head - 1) == '\n') {
             caretX = 0;
         }
-        System.out.println("XYRange");
         setCaretPosition(getAbsoluteX() + caretX, indexY);
     }
 

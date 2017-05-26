@@ -1356,7 +1356,6 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
             float diff = widthTest.getLineWidth();
 
             float rangeX;
-
             if (rangeHead - this.head <= 0) {
                 widthTest.setText("");
                 rangeX = widthTest.getLineWidth();
@@ -1405,11 +1404,11 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
             }
 
             if (rangeHead > rangeTail) {
-                caret.getMaterial().setFloat("TextRangeStart", rangeW);
-                caret.getMaterial().setFloat("TextRangeEnd", rangeX);
+                caret.getMaterial().setFloat("TextRangeStartX", rangeW);
+                caret.getMaterial().setFloat("TextRangeEndX", rangeX);
             } else {
-                caret.getMaterial().setFloat("TextRangeStart", rangeX);
-                caret.getMaterial().setFloat("TextRangeEnd", rangeW);
+                caret.getMaterial().setFloat("TextRangeStartX", rangeX);
+                caret.getMaterial().setFloat("TextRangeEndX", rangeW);
             }
 
             caret.getMaterial().setBoolean("ShowTextRange", true);
@@ -1421,8 +1420,10 @@ public class TextField extends Element implements Control, KeyboardListener, Tab
         textRangeText = "";
         rangeHead = -1;
         rangeTail = -1;
-        caret.getMaterial().setFloat("TextRangeStart", 0);
-        caret.getMaterial().setFloat("TextRangeEnd", 0);
+        caret.getMaterial().setFloat("TextRangeStartX", 0);
+        caret.getMaterial().setFloat("TextRangeStartY", 0);
+        caret.getMaterial().setFloat("TextRangeEndX", 0);
+        caret.getMaterial().setFloat("TextRangeEndY", 0);
         caret.getMaterial().setBoolean("ShowTextRange", false);
     }
 

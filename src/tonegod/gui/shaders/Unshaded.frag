@@ -32,8 +32,10 @@ uniform float m_GlobalAlpha;
 	uniform float m_CaretX;
 	uniform float m_CaretSpeed;
 	uniform float m_LastUpdate;
-	uniform float m_TextRangeStart;
-	uniform float m_TextRangeEnd;
+        uniform float m_TextRangeStartX;
+	uniform float m_TextRangeEndX;
+        uniform float m_TextRangeStartY;
+	uniform float m_TextRangeEndY;
 #endif
 
 uniform vec4 m_Color;
@@ -99,16 +101,23 @@ void main(){
 	
 	#if defined(IS_TEXTFIELD)
 		#if defined(SHOW_TEXT_RANGE)
-			float trStart;
-			float trEnd;
-			if (m_TextRangeStart < m_TextRangeEnd) {
-				trStart = m_TextRangeStart;
-				trEnd = m_TextRangeEnd;
+			float trStartX, trStartY;
+			float trEndX, trEndY;
+                        if (m_TextRangeStartX < m_TextRangeEndX) {
+				trStartX = m_TextRangeStartX;
+				trEndX = m_TextRangeEndX;
 			} else {
-				trStart = m_TextRangeEnd;
-				trEnd = m_TextRangeStart;
+				trStartX = m_TextRangeEndX;
+				trEndX = m_TextRangeStartX;
 			}
-			if (pos.x >= trStart && pos.x <= trEnd) {
+                        if (m_TextRangeStartY > m_TextRangeEndY) {
+				trStartY = m_TextRangeStartY;
+				trEndY = m_TextRangeEndY;
+			} else {
+				trStartY = m_TextRangeEndY;
+				trEndY = m_TextRangeStartY;
+			}
+			if (pos.x >= trStartX && pos.x <= trEndX && pos.y >= trStartY && pos.y >= trEndY) {
 				color = vec4(0.0,0.0,1.0,0.5);
 			}
 		#endif
