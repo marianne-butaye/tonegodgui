@@ -66,8 +66,11 @@ public abstract class Button extends Element implements Control, MouseButtonList
     public void hide()
     {
         super.hide();
-        orgText = this.getText();
-        this.setText("");
+        if(!this.getText().isEmpty())
+        {
+            orgText = this.getText();
+            this.setText("");
+        }
     }
     
     @Override
