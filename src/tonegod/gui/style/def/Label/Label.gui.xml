@@ -9,6 +9,12 @@
 				<b value="0.8" />
 				<a value="1.0" />
 			</property>
+                        <property name="disabledColor" type="ColorRGBA">
+				<r value="0.6" />
+				<g value="0.6" />
+				<b value="0.6" />
+				<a value="1.0" />
+			</property>
 			<property name="textAlign" type="String" value="Left" />
 			<property name="textVAlign" type="String" value="Center" />
 			<property name="textWrap" type="String" value="NoWrap" />

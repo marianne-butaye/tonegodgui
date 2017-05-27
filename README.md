@@ -20,12 +20,13 @@ This version has some minor modifications from the original tonegodgui forked fr
 * [Button](readme/Button.md)
 * [TabControl](readme/TabControl.md)
 
-## Major changes in this repository
-* Some components can have different styles in one application (Button, Panel, ScrollPanel).
+## Changes in this repository
+* Some components can have different styles in one application (Button, Panel, ScrollPanel, SelectList).
 * Buttons can correctly be hidden/shown.
 * New TextArea component (still needs some fixes but basic implementation is there).
 * More functions in RadioButtonGroup (remove, clear, clearSelection, getButtonCount).
 * Disabled elements in forms are skipped when tabbing.
+* Labels now have a disabled color.
 
 ## other known versions/forks
 

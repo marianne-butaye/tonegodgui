@@ -61,25 +61,6 @@ public abstract class Button extends Element implements Control, MouseButtonList
     // Optional LabelElement
     protected boolean useOptionalLabel = false;
     protected TextElement buttonLabel;
-
-    @Override
-    public void hide()
-    {
-        super.hide();
-        if(!this.getText().isEmpty())
-        {
-            orgText = this.getText();
-            this.setText("");
-        }
-    }
-    
-    @Override
-    public void show()
-    {
-        super.show();
-        if(!orgText.isEmpty())
-            this.setText(orgText);
-    }
     
     /**
      * Creates a new instance of the Button control
@@ -389,6 +370,25 @@ public abstract class Button extends Element implements Control, MouseButtonList
          */
     }
 
+    @Override
+    public void hide()
+    {
+        super.hide();
+        if(!this.getText().isEmpty())
+        {
+            orgText = this.getText();
+            this.setText("");
+        }
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+        if(!orgText.isEmpty())
+            this.setText(orgText);
+    }
+    
     /**
      * StyleName setter.
      * @return The name of the style used on the button.
